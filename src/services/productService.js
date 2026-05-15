@@ -1,18 +1,27 @@
-import MOCK_PRODUCTS from "../mockdata/mock_products";
-
 export const getProducts = async () => {
-  // TODO ESTUDIANTE:
-  // Reemplaza este retorno local por FakeStore API.
-  // Ejemplo esperado: GET https://fakestoreapi.com/products
-  return [...MOCK_PRODUCTS].sort((a, b) => Number(a.id) - Number(b.id));
+  try {
+    const response = await fetch("https://fakestoreapi.com/products");
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Failed to fetch products:", error);
+    return [];
+  }
 };
 
 export const getProductById = async (id) => {
-  // TODO ESTUDIANTE:
-  // Reemplaza esta busqueda local por FakeStore API.
-  // Ejemplo esperado: GET https://fakestoreapi.com/products/{id}
-  const product = MOCK_PRODUCTS.find(
-    (item) => Number(item.id) === Number(id),
-  );
-  return product ?? null;
+  try {
+    const response = await fetch(`https://fakestoreapi.com/products/${id}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error(`Failed to fetch product with id ${id}:`, error);
+    return null;
+  }
 };
