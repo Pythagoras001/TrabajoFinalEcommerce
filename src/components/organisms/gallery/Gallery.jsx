@@ -2,13 +2,14 @@ import { useEffect, useMemo, useState } from "react";
 import ProductCard from "../../molecules/ProductCard";
 import { getProducts } from "../../../services/productService";
 
-const ITEMS_PER_PAGE = 4;
-// TODO ESTUDIANTE: ajusta items por pagina y mejora UX de filtros/categorias.
+const ITEMS_PER_PAGE = 8;
 
 export default function Gallery() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [maxPrice, setMaxPrice] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
@@ -18,18 +19,30 @@ export default function Gallery() {
     });
   }, []);
 
-  const filteredProducts = useMemo(() => {
-    // TODO ESTUDIANTE: extender busqueda por categoria y precio.
-    const normalized = searchTerm.trim().toLowerCase();
-    if (!normalized) return products;
+  const categories = useMemo(() => {
+    const cats = products.map((p) => p.category);
+    return ["All", ...new Set(cats)];
+  }, [products]);
 
+  const filteredProducts = useMemo(() => {
+    const normalized = searchTerm.trim().toLowerCase();
+    
     return products.filter((product) => {
-      return (
+      // Filtrar por búsqueda de texto
+      const matchesSearch = normalized === "" || 
         product.title.toLowerCase().includes(normalized) ||
-        product.description.toLowerCase().includes(normalized)
-      );
+        product.description.toLowerCase().includes(normalized);
+
+      // Filtrar por categoría
+      const matchesCategory = selectedCategory === "All" || product.category === selectedCategory;
+
+      // Filtrar por precio
+      const priceLimit = parseFloat(maxPrice);
+      const matchesPrice = isNaN(priceLimit) || product.price <= priceLimit;
+
+      return matchesSearch && matchesCategory && matchesPrice;
     });
-  }, [products, searchTerm]);
+  }, [products, searchTerm, selectedCategory, maxPrice]);
 
   const totalPages = Math.max(1, Math.ceil(filteredProducts.length / ITEMS_PER_PAGE));
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -54,20 +67,40 @@ export default function Gallery() {
 
   return (
     <section className="p-6">
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
+      <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
         <div>
           <h2 className="text-2xl font-bold">Nuestros Productos</h2>
           <p className="text-sm text-gray-500 mt-1">
             {filteredProducts.length} resultado(s)
           </p>
         </div>
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={handleSearchChange}
-          placeholder="Buscar por nombre o descripción..."
-          className="w-full sm:w-80 px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
-        />
+        <div className="flex flex-col sm:flex-row gap-2">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={handleSearchChange}
+            placeholder="Buscar por nombre o descripción..."
+            className="w-full sm:w-64 px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
+          />
+          <select 
+            value={selectedCategory} 
+            onChange={(e) => { setSelectedCategory(e.target.value); setCurrentPage(1); }}
+            className="w-full sm:w-auto px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-500 capitalize"
+          >
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat === "All" ? "Todas las categorías" : cat}
+              </option>
+            ))}
+          </select>
+          <input
+            type="number"
+            value={maxPrice}
+            onChange={(e) => { setMaxPrice(e.target.value); setCurrentPage(1); }}
+            placeholder="Precio máximo"
+            className="w-full sm:w-40 px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
+          />
+        </div>
       </div>
 
       {filteredProducts.length === 0 ? (

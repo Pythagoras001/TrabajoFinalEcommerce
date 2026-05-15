@@ -60,7 +60,7 @@ export const loginUser = async (email, password) => {
 
   const normalizedUser = mapUserShape(foundUser);
   localStorage.setItem(LOGGED_IN_USER_KEY, JSON.stringify(normalizedUser));
-  localStorage.setItem("token", "token-falso-123"); // Manejo de token simple
+  localStorage.setItem("token", "token-falso-123"); // Manejo de token
   notifyAuthChange();
 
   return { success: true, user: normalizedUser };
