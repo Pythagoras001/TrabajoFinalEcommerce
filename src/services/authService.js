@@ -60,6 +60,7 @@ export const loginUser = async (email, password) => {
 
   const normalizedUser = mapUserShape(foundUser);
   localStorage.setItem(LOGGED_IN_USER_KEY, JSON.stringify(normalizedUser));
+  localStorage.setItem("token", "token-falso-123"); // Manejo de token simple
   notifyAuthChange();
 
   return { success: true, user: normalizedUser };
@@ -68,6 +69,13 @@ export const loginUser = async (email, password) => {
 export const registerFullUser = async (userData) => {
   // TODO ESTUDIANTE:
   // Agrega validaciones de formulario mas robustas (longitud, formato, etc).
+  if (!userData.email.includes("@") || !userData.email.includes(".")) {
+    return { success: false, error: "El email no tiene un formato válido." };
+  }
+  if (userData.password.length < 6) {
+    return { success: false, error: "La contraseña debe tener al menos 6 caracteres." };
+  }
+
   const registeredUsers = getRegisteredUsers();
   const allUsers = [...MOCK_USERS, ...registeredUsers];
   const emailExists = allUsers.some(
@@ -99,6 +107,7 @@ export const logoutUser = async () => {
   // TODO ESTUDIANTE:
   // Si usas backend real, invalida token/sesion en servidor aqui.
   localStorage.removeItem(LOGGED_IN_USER_KEY);
+  localStorage.removeItem("token"); // Invalidar token simple
   notifyAuthChange();
   return { success: true };
 };
