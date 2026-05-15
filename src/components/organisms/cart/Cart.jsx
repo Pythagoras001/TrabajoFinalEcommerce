@@ -195,6 +195,7 @@ export default function Cart() {
 
           <Link
             to="/checkout"
+            state={{ discountApplied, shippingMethod, shippingCost, discountAmount, taxAmount, finalTotal }}
             className="w-full flex items-center justify-center gap-3 px-6 py-4.5 rounded-xl bg-gray-900 text-white text-lg font-semibold hover:bg-black hover:shadow-xl hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 group"
           >
             Proceder al Checkout

@@ -1,8 +1,11 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import useCartStore from "../../../store/cartStore";
 
 export default function Checkout() {
+  const location = useLocation();
+  const cartState = location.state || {};
+
   // TODO ESTUDIANTE:
   // Este checkout debe mantenerse simulado en el taller.
   // Solo personaliza estilos, estructura visual y textos.
@@ -17,6 +20,30 @@ export default function Checkout() {
   });
 
   const total = getTotalPrice();
+
+  const SHIPPING_RATES = {
+    standard: { price: 5.00, label: "Estándar" },
+    express: { price: 15.00, label: "Express" }
+  };
+
+  const discountApplied = cartState.discountApplied || { type: null, value: 0, code: "" };
+  const shippingMethod = cartState.shippingMethod || "standard";
+  
+  let discountAmount = cartState.discountAmount !== undefined ? cartState.discountAmount : 0;
+  let shippingCost = cartState.shippingCost !== undefined ? cartState.shippingCost : SHIPPING_RATES[shippingMethod].price;
+  
+  if (cartState.discountAmount === undefined) {
+    if (discountApplied.type === "percent") {
+      discountAmount = total * discountApplied.value;
+    } else if (discountApplied.type === "shipping") {
+      shippingCost = 0;
+    }
+  }
+
+  const taxRate = 0.16;
+  const taxableAmount = Math.max(0, total - discountAmount);
+  const taxAmount = cartState.taxAmount !== undefined ? cartState.taxAmount : taxableAmount * taxRate;
+  const finalTotal = cartState.finalTotal !== undefined ? cartState.finalTotal : taxableAmount + shippingCost + taxAmount;
 
   const handleChange = (event) => {
     setFormData((prev) => ({ ...prev, [event.target.name]: event.target.value }));
@@ -136,7 +163,7 @@ export default function Checkout() {
               className="w-full flex items-center justify-center gap-3 px-6 py-4.5 rounded-xl bg-gray-900 text-white text-lg font-semibold hover:bg-black hover:shadow-xl hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 group"
             >
               <svg className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-              Pagar ${total.toFixed(2)}
+              Pagar ${finalTotal.toFixed(2)}
             </button>
             <p className="text-center text-xs font-medium text-gray-400 mt-5 flex items-center justify-center gap-1.5">
               <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
@@ -178,16 +205,30 @@ export default function Checkout() {
               <span>Subtotal</span>
               <span>${total.toFixed(2)}</span>
             </div>
+            {discountAmount > 0 && (
+              <div className="flex justify-between text-sm text-green-600 font-medium">
+                <span>Descuento ({discountApplied.code})</span>
+                <span>-${discountAmount.toFixed(2)}</span>
+              </div>
+            )}
             <div className="flex justify-between text-sm text-gray-600 font-medium">
-              <span>Envío</span>
-              <span className="text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded-md">Gratis</span>
+              <span>Envío ({SHIPPING_RATES[shippingMethod].label})</span>
+              {shippingCost === 0 ? (
+                 <span className="text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded-md">Gratis</span>
+              ) : (
+                 <span>${shippingCost.toFixed(2)}</span>
+              )}
+            </div>
+            <div className="flex justify-between text-sm text-gray-600 font-medium">
+              <span>Impuestos (16%)</span>
+              <span>${taxAmount.toFixed(2)}</span>
             </div>
             <div className="flex justify-between items-end pt-4 mt-2 border-t border-gray-200">
               <div>
                 <span className="block text-sm text-gray-500 font-medium mb-1">Total a pagar</span>
                 <span className="text-xs text-gray-400">Incluye impuestos</span>
               </div>
-              <span className="text-3xl font-extrabold text-gray-900 tracking-tight">${total.toFixed(2)}</span>
+              <span className="text-3xl font-extrabold text-gray-900 tracking-tight">${finalTotal.toFixed(2)}</span>
             </div>
           </div>
         </aside>
